@@ -13,16 +13,17 @@ import (
 )
 
 func run() error {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	zerologr.NameFieldName = "logger"
-	zerologr.NameSeparator = "/"
+	log := logger()
 
-	zl := zerolog.New(zerolog.NewConsoleWriter())
-	zl = zl.With().Caller().Timestamp().Logger()
-	var log logr.Logger = zerologr.New(&zl)
+	tok, ok := os.LookupEnv("GITHUB_TOKEN")
+	if !ok {
+		return fmt.Errorf("GITHUB_TOKEN not set")
+	}
+	org, ok := os.LookupEnv("GITHUB_OWNER")
+	if !ok {
+		return fmt.Errorf("GITHUB_OWNER not set")
+	}
 
-	tok := os.Getenv("GITHUB_TOKEN")
-	org := "thepwagner-org"
 	ctx := context.Background()
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tok})
@@ -68,6 +69,16 @@ func run() error {
 	}
 
 	return nil
+}
+
+func logger() logr.Logger {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+	zerologr.NameFieldName = "logger"
+	zerologr.NameSeparator = "/"
+
+	zl := zerolog.New(zerolog.NewConsoleWriter())
+	zl = zl.With().Caller().Timestamp().Logger()
+	return zerologr.New(&zl)
 }
 
 func main() {
