@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zerologr"
@@ -45,7 +46,8 @@ func run() error {
 		}
 		pkgLog.Info("listed versions", "version_count", len(versions))
 
-	versions:
+		var latestDigest string
+	firstPass:
 		for _, v := range versions {
 			ctr := v.GetMetadata().GetContainer()
 			if ctr == nil {
@@ -54,16 +56,51 @@ func run() error {
 
 			for _, t := range ctr.Tags {
 				if t == "latest" {
-					continue versions
+					latestDigest = *v.Name
+					continue firstPass
 				}
 			}
 
 			if len(ctr.Tags) == 0 {
-				pkgLog.Info("deleting untagged version version", "version_id", *v.ID)
+				pkgLog.Info("deleting untagged version", "version_id", *v.ID)
 				_, err := client.Organizations.PackageDeleteVersion(ctx, org, "container", *pkg.Name, *v.ID)
 				if err != nil {
 					return fmt.Errorf("failed to delete version %q %d: %w", *pkg.Name, *v.ID, err)
 				}
+			}
+		}
+
+		if latestDigest == "" {
+			continue
+		}
+
+		versions, _, err = client.Organizations.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to list versions of %q: %w", *pkg.Name, err)
+		}
+		pkgLog.Info("listed versions", "version_count", len(versions))
+
+		digest := strings.Replace(latestDigest, ":", "-", -1)
+		latestAtt := fmt.Sprintf("%s.att", digest)
+		latestSig := fmt.Sprintf("%s.sig", digest)
+	secondPass:
+		for _, v := range versions {
+			ctr := v.GetMetadata().GetContainer()
+			if ctr == nil {
+				continue
+			}
+
+			for _, t := range ctr.Tags {
+				switch t {
+				case latestAtt, latestSig, "latest":
+					continue secondPass
+				}
+			}
+
+			pkgLog.Info("deleting stale version", "version_id", *v.ID)
+			_, err := client.Organizations.PackageDeleteVersion(ctx, org, "container", *pkg.Name, *v.ID)
+			if err != nil {
+				return fmt.Errorf("failed to delete version %q %d: %w", *pkg.Name, *v.ID, err)
 			}
 		}
 	}
