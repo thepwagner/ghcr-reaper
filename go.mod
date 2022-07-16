@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/go-logr/logr v1.2.3
-	github.com/go-logr/zerologr v1.2.1
+	github.com/go-logr/zerologr v1.2.2
 	github.com/google/go-github/v43 v43.0.0
 	github.com/rs/zerolog v1.27.0
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
