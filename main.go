@@ -20,10 +20,6 @@ func run() error {
 	if !ok {
 		return fmt.Errorf("GITHUB_TOKEN not set")
 	}
-	org, ok := os.LookupEnv("GITHUB_OWNER")
-	if !ok {
-		return fmt.Errorf("GITHUB_OWNER not set")
-	}
 
 	ctx := context.Background()
 
@@ -31,7 +27,26 @@ func run() error {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	packages, _, err := client.Organizations.ListPackages(ctx, org, &github.PackageListOptions{PackageType: github.String("container")})
+	if err := prunePackages(ctx, log, client.Organizations, "thepwagner-org"); err != nil {
+		return err
+	}
+	if err := prunePackages(ctx, log, client.Users, "thepwagner"); err != nil {
+		return err
+	}
+	return nil
+}
+
+type packageClient interface {
+	ListPackages(ctx context.Context, org string, opts *github.PackageListOptions) ([]*github.Package, *github.Response, error)
+	PackageGetAllVersions(ctx context.Context, org, packageType, packageName string, opts *github.PackageListOptions) ([]*github.PackageVersion, *github.Response, error)
+	PackageDeleteVersion(ctx context.Context, org, packageType, packageName string, id int64) (*github.Response, error)
+}
+
+var _ packageClient = (*github.OrganizationsService)(nil)
+var _ packageClient = (*github.UsersService)(nil)
+
+func prunePackages(ctx context.Context, log logr.Logger, client packageClient, org string) error {
+	packages, _, err := client.ListPackages(ctx, org, &github.PackageListOptions{PackageType: github.String("container")})
 	if err != nil {
 		return fmt.Errorf("failed to list packages: %w", err)
 	}
@@ -40,7 +55,7 @@ func run() error {
 	for _, pkg := range packages {
 		pkgLog := log.WithValues("package_name", *pkg.Name)
 		pkgLog.Info("processing package", "package_id", *pkg.ID, "version_count", pkg.GetVersionCount())
-		versions, _, err := client.Organizations.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
+		versions, _, err := client.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to list versions of %q: %w", *pkg.Name, err)
 		}
@@ -63,7 +78,7 @@ func run() error {
 
 			if len(ctr.Tags) == 0 {
 				pkgLog.Info("deleting untagged version", "version_id", *v.ID)
-				_, err := client.Organizations.PackageDeleteVersion(ctx, org, "container", *pkg.Name, *v.ID)
+				_, err := client.PackageDeleteVersion(ctx, org, "container", *pkg.Name, *v.ID)
 				if err != nil {
 					return fmt.Errorf("failed to delete version %q %d: %w", *pkg.Name, *v.ID, err)
 				}
@@ -74,7 +89,7 @@ func run() error {
 			continue
 		}
 
-		versions, _, err = client.Organizations.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
+		versions, _, err = client.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to list versions of %q: %w", *pkg.Name, err)
 		}
@@ -98,7 +113,7 @@ func run() error {
 			}
 
 			pkgLog.Info("deleting stale version", "version_id", *v.ID)
-			_, err := client.Organizations.PackageDeleteVersion(ctx, org, "container", *pkg.Name, *v.ID)
+			_, err := client.PackageDeleteVersion(ctx, org, "container", *pkg.Name, *v.ID)
 			if err != nil {
 				return fmt.Errorf("failed to delete version %q %d: %w", *pkg.Name, *v.ID, err)
 			}
