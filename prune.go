@@ -34,6 +34,8 @@ func prunePackages(ctx context.Context, log logr.Logger, client packageClient, o
 		}
 		pkgLog.Info("listed versions", "version_count", len(versions))
 
+		// Initially remove untagged images, and note the :latest digest.
+		deleted := map[int64]struct{}{}
 		var latestDigest string
 	firstPass:
 		for _, v := range versions {
@@ -55,24 +57,25 @@ func prunePackages(ctx context.Context, log logr.Logger, client packageClient, o
 				if err != nil {
 					return fmt.Errorf("failed to delete version %q %d: %w", *pkg.Name, *v.ID, err)
 				}
+				deleted[*v.ID] = struct{}{}
 			}
 		}
 
+		// TODO: not deleting the heads of open PRs would be cool.
+
+		// If :latest was detected, we can delete all other signatures/attestations:
 		if latestDigest == "" {
 			continue
 		}
-
-		versions, _, err = client.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to list versions of %q: %w", *pkg.Name, err)
-		}
-		pkgLog.Info("listed versions", "version_count", len(versions))
-
 		digest := strings.Replace(latestDigest, ":", "-", -1)
 		latestAtt := fmt.Sprintf("%s.att", digest)
 		latestSig := fmt.Sprintf("%s.sig", digest)
 	secondPass:
 		for _, v := range versions {
+			if _, ok := deleted[*v.ID]; ok {
+				continue
+			}
+
 			ctr := v.GetMetadata().GetContainer()
 			if ctr == nil {
 				continue
