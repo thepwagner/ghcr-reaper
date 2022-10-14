@@ -7,7 +7,7 @@ require (
 	github.com/go-logr/zerologr v1.2.2
 	github.com/google/go-github/v47 v47.1.0
 	github.com/rs/zerolog v1.28.0
-	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
+	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 )
 
 require (
