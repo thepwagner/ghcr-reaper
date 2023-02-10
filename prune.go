@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v50/github"
 )
 
 type packageClient interface {
