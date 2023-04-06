@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zerologr"
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v51/github"
 	"github.com/rs/zerolog"
 	"golang.org/x/oauth2"
 )
