@@ -6,6 +6,7 @@ require (
 	github.com/go-logr/logr v1.2.4
 	github.com/go-logr/zerologr v1.2.3
 	github.com/google/go-github/v55 v55.0.0
+	github.com/google/go-github/v56 v56.0.0
 	github.com/rs/zerolog v1.30.0
 	golang.org/x/oauth2 v0.13.0
 )
