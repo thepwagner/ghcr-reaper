@@ -3,17 +3,26 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
+	"time"
 
-	"github.com/go-logr/logr"
-	"github.com/go-logr/zerologr"
 	"github.com/google/go-github/v56/github"
-	"github.com/rs/zerolog"
+	"github.com/lmittmann/tint"
+
 	"golang.org/x/oauth2"
 )
 
 func run() error {
-	log := logger()
+	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{})))
+
+	// set global logger with custom options
+	slog.SetDefault(slog.New(
+		tint.NewHandler(os.Stderr, &tint.Options{
+			Level:      slog.LevelDebug,
+			TimeFormat: time.RFC3339,
+		}),
+	))
 
 	tok, ok := os.LookupEnv("GITHUB_TOKEN")
 	if !ok {
@@ -26,23 +35,13 @@ func run() error {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	if err := prunePackages(ctx, log, client.Users, "thepwagner"); err != nil {
+	if err := prunePackages(ctx, client.Users, "thepwagner"); err != nil {
 		return err
 	}
-	if err := prunePackages(ctx, log, client.Organizations, "thepwagner-org"); err != nil {
+	if err := prunePackages(ctx, client.Organizations, "thepwagner-org"); err != nil {
 		return err
 	}
 	return nil
-}
-
-func logger() logr.Logger {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	zerologr.NameFieldName = "logger"
-	zerologr.NameSeparator = "/"
-
-	zl := zerolog.New(zerolog.NewConsoleWriter())
-	zl = zl.With().Caller().Timestamp().Logger()
-	return zerologr.New(&zl)
 }
 
 func main() {

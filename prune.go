@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
-	"github.com/go-logr/logr"
 	"github.com/google/go-github/v56/github"
 )
 
@@ -18,15 +18,15 @@ type packageClient interface {
 var _ packageClient = (*github.OrganizationsService)(nil)
 var _ packageClient = (*github.UsersService)(nil)
 
-func prunePackages(ctx context.Context, log logr.Logger, client packageClient, org string) error {
+func prunePackages(ctx context.Context, client packageClient, org string) error {
 	packages, _, err := client.ListPackages(ctx, org, &github.PackageListOptions{PackageType: github.String("container")})
 	if err != nil {
 		return fmt.Errorf("failed to list packages: %w", err)
 	}
-	log.Info("listed packages", "package_count", len(packages))
+	slog.Info("listed packages", "package_count", len(packages))
 
 	for _, pkg := range packages {
-		pkgLog := log.WithValues("package_name", *pkg.Name)
+		pkgLog := slog.Default().With("package_name", *pkg.Name)
 		pkgLog.Info("processing package", "package_id", *pkg.ID, "version_count", pkg.GetVersionCount())
 		versions, _, err := client.PackageGetAllVersions(ctx, org, "container", *pkg.Name, &github.PackageListOptions{})
 		if err != nil {
