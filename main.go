@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/google/go-github/v56/github"
@@ -13,10 +14,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func run() error {
-	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{})))
-
-	// set global logger with custom options
+func run(ctx context.Context) error {
 	slog.SetDefault(slog.New(
 		tint.NewHandler(os.Stderr, &tint.Options{
 			Level:      slog.LevelDebug,
@@ -28,9 +26,6 @@ func run() error {
 	if !ok {
 		return fmt.Errorf("GITHUB_TOKEN not set")
 	}
-
-	ctx := context.Background()
-
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tok})
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
@@ -45,7 +40,10 @@ func run() error {
 }
 
 func main() {
-	if err := run(); err != nil {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	if err := run(ctx); err != nil {
 		panic(err)
 	}
 }

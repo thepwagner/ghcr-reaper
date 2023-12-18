@@ -1,0 +1,16 @@
+linters:
+  enable:
+    - bodyclose
+    - errcheck
+    - errorlint
+    - gosimple
+    - govet
+    - ineffassign
+    - paralleltest
+    - revive
+    - staticcheck
+    - thelper
+    - tparallel
+    - unused
+    - unconvert
+    - whitespace
