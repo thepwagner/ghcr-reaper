@@ -3,7 +3,7 @@ module github.com/thepwagner/ghcr-reaper
 go 1.21
 
 require (
-	github.com/google/go-github/v58 v58.0.0
+	github.com/google/go-github/v59 v59.0.0
 	github.com/lmittmann/tint v1.0.4
 	golang.org/x/oauth2 v0.17.0
 )
