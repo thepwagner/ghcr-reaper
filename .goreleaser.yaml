@@ -1,0 +1,15 @@
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./
+
+nfpms:
+  - id: goreleaser
+    maintainer: Peter Wagner <deb@pwagner.net>
+    description: "GitHub Container Registry Reaper. Fear it."
+    formats:
+      - deb
