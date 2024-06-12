@@ -25,7 +25,7 @@ jobs:
       - name: "📦 Release"
         uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6.0.0
         with:
-          version: v1.25.1
+          version: v2.0.1
           args: release --clean --parallelism=1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
