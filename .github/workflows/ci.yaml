@@ -7,6 +7,6 @@ permissions: {}
 
 jobs:
   build:
-    uses: thepwagner-org/actions/.github/workflows/golang-test.yaml@254500a695fcc8d6c5253189e70f95699733841f # v2.11.0
+    uses: thepwagner-org/actions/.github/workflows/golang-test.yaml@29fc277227ae3fc735e9ac7790d307f0516a70c3 # v3.0.0
     permissions:
       contents: read
