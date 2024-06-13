@@ -30,10 +30,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "🔏 Sign .deb"
-        uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919 # v1.2.0
+        uses: actions/attest-build-provenance@3119152b59607c0d91a135e8d80c0d339f241a12 # v1.3.0
         with:
           subject-path: "dist/*.deb"
       - name: "🔏 Sign .tar.gz"
-        uses: actions/attest-build-provenance@49df96e17e918a15956db358890b08e61c704919 # v1.2.0
+        uses: actions/attest-build-provenance@3119152b59607c0d91a135e8d80c0d339f241a12 # v1.3.0
         with:
           subject-path: "dist/*.tar.gz"
