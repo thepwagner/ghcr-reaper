@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/google/go-github/v66 v66.0.0
+	github.com/google/go-github/v67 v67.0.0
 	github.com/lmittmann/tint v1.0.6
 	golang.org/x/oauth2 v0.24.0
 )
