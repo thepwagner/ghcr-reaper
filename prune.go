@@ -19,7 +19,7 @@ var _ packageClient = (*github.OrganizationsService)(nil)
 var _ packageClient = (*github.UsersService)(nil)
 
 func prunePackages(ctx context.Context, client packageClient, org string) error {
-	packages, _, err := client.ListPackages(ctx, org, &github.PackageListOptions{PackageType: github.String("container")})
+	packages, _, err := client.ListPackages(ctx, org, &github.PackageListOptions{PackageType: github.Ptr("container")})
 	if err != nil {
 		return fmt.Errorf("failed to list packages: %w", err)
 	}
